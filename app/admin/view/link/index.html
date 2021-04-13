@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>SigalBlog - 友链管理</title>
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=0">
+    <link rel="stylesheet" href="__ADMIN__/layuiadmin/layui/css/layui.css" media="all">
+    <link rel="stylesheet" href="__ADMIN__/layuiadmin/style/admin.css" media="all">
+</head>
+
+<body>
+    <div class="layui-fluid">
+        <div class="layui-card">
+            <div class="layui-card-body">
+
+                <div class="layui-btn-container">
+                    <button class="layui-btn layui-btn-danger layui-btn-sm layuiadmin-btn-role" data-type="batchdel"><i
+                            class="layui-icon layui-icon-delete"></i>批量删除</button>
+                    <button class="layui-btn layuiadmin-btn-role layui-btn-sm" data-type="add"><i
+                            class="layui-icon layui-icon-addition"></i>添加友链</button>
+                </div>
+
+                <!-- <div style="padding-bottom: 10px;">
+                    <button class="layui-btn layui-btn-danger layuiadmin-btn-role" data-type="batchdel">批量删除</button>
+                    <button class="layui-btn layuiadmin-btn-role" data-type="add">添加友链</button>
+                </div> -->
+
+                <table id="link" lay-filter="link"></table>
+
+                <script type="text/html" id="status">
+                    <input type="checkbox" name="status" lay-skin="switch" lay-text="开启|隐藏" lay-filter="status" aid={{d.id}} {{d.status == 1 ? "checked" : ""}}
+                   data-json="{{ encodeURIComponent(JSON.stringify(d)) }}">
+                </script>
+
+                <script type="text/html" id="table-toolbar">
+                    <a class="layui-btn layui-btn-normal layui-btn-xs" lay-event="edit"><i class="layui-icon layui-icon-edit"></i>编辑</a>
+                    <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del"><i class="layui-icon layui-icon-delete"></i>删除</a>
+                </script>
+            </div>
+        </div>
+    </div>
+
+    <script src="__ADMIN__/layuiadmin/layui/layui.js"></script>
+    <script>
+        layui.config({
+            base: '__ADMIN__/layuiadmin/' //静态资源所在路径
+        }).extend({
+            index: 'lib/index' //主入口模块
+        }).use(['index', 'table', 'layer'], function () {
+            var $ = layui.$
+                , form = layui.form
+                , table = layui.table
+                , admin = layui.admin
+                , layer = layui.layer;
+
+            // 表格渲染
+            table.render({
+                elem: '#link'
+                , url: '{:url("link/table")}'
+                // , toolbar: '#toolbar'
+                , cols: [
+                    [
+                        { checkbox: true, fixed: 'left' },
+                        { type: 'numbers', title: '编号', align: 'center', fixed: 'left' },
+                        { field: 'name', title: '友链名称', align: 'center', width: 300 },
+                        { field: 'addr', title: '友链地址', minWidth: 300, align: 'center' },
+                        { field: 'create_time', title: '创建时间', width: 200, align: 'center' },
+                        { field: 'status', title: '友链状态', templet: '#status', width: 120, unresize: true, align: 'center' },
+                        { title: '操作', toolbar: '#table-toolbar', align: 'center', width: 150, fixed: 'right' }
+                    ]
+                ]
+                , page: true
+                , limit: 10
+                , limits: [5, 10, 20]
+            });
+
+            // 监听状态更改
+            form.on('switch(status)', function (obj) {
+                var id = $(this).attr('aid');
+                var status = obj.elem.checked ? "1" : "0";
+                layer.confirm('确定更改状态么？', function (index) {
+                    $.ajax({
+                        url: '/link/status'
+                        , type: 'put'
+                        , data: { id: id, status: status }
+                        , dataType: 'json'
+                        , success: function (res) {
+                            if (res.code == 1) {
+                                layer.msg(res.msg, {
+                                    icon: 1,
+                                    time: 1000
+                                })
+                            } else {
+                                layer.msg(res.msg, {
+                                    icon: 2,
+                                    time: 2000
+                                })
+                            }
+                        }
+                    });
+                })
+            });
+
+            // 监听状态更改
+            // form.on('switch(link_status)', function (obj) {
+            //     var json = JSON.parse(decodeURIComponent($(this).data('json')));
+            //     $.ajax({
+            //         url: "/link/update/" + json.id
+            //         , type: 'post'
+            //         , data: json
+            //         , dataType: 'json'
+            //         , success: function (res) {
+            //             if (res.status == 'success') {
+            //                 layer.msg(res.msg, {
+            //                     icon: 1,
+            //                     time: 1000
+            //                 })
+            //             }
+            //         }
+            //     });
+            // });
+
+            // 头工具栏事件
+            table.on('toolbar(test-table-toolbar)', function (obj) {
+                var checkStatus = table.checkStatus(obj.config.id);
+                switch (obj.event) {
+                    case 'getCheckData':
+                        var data = checkStatus.data;
+                        layer.alert(JSON.stringify(data));
+                        break;
+                    case 'getCheckLength':
+                        var data = checkStatus.data;
+                        layer.msg('选中了：' + data.length + ' 个');
+                        break;
+                    case 'isAll':
+                        layer.msg(checkStatus.isAll ? '全选' : '未全选');
+                        break;
+                };
+            });
+
+            //监听工具条
+            table.on('tool(link)', function (obj) {
+                var data = obj.data;
+                if (obj.event === 'del') {
+                    layer.confirm('真的删除行么', function (index) {
+                        // obj.del();
+                        //执行 Ajax 后重载
+                        $.ajax({
+                            url: "/link/delete/" + data.id
+                            , type: 'delete'
+                            , dataType: 'json'
+                            , success: function (res) {
+                                if (res.code == 1) {
+                                    layer.msg(res.msg, {
+                                        icon: 1,
+                                        time: 1000
+                                    }, function () {
+                                        table.reload('link');
+                                    })
+                                } else {
+                                    layer.msg(res.msg, {
+                                        icon: 2,
+                                        time: 2000
+                                    })
+                                }
+                            }
+                        });
+                        layer.close(index);
+                    });
+                } else if (obj.event === 'edit') {
+                    // layer.alert('编辑行：<br>' + JSON.stringify(data))
+                    layer.open({
+                        type: 2
+                        , title: '编辑友链'
+                        , content: '/link/edit/' + data.id
+                        , area: ['500px', '480px']
+                        , btn: ['确定', '取消']
+                        , yes: function (index, layero) {
+                            var iframeWindow = window['layui-layer-iframe' + index]
+                                , submit = layero.find('iframe').contents().find("#LAY-link-submit");
+
+                            //监听提交
+                            iframeWindow.layui.form.on('submit(LAY-link-submit)', function (data) {
+                                var field = data.field; //获取提交的字段
+
+                                //提交 Ajax 成功后，静态更新表格中的数据
+                                $.ajax({
+                                    url: "/link/update/" + field.id
+                                    , data: field
+                                    , type: 'put'
+                                    , dataType: 'json'
+                                    , success: function (res) {
+                                        if (res.code == 1) {
+                                            layer.msg(res.msg, {
+                                                icon: 1,
+                                                time: 1000
+                                            }, function () {
+                                                table.reload('link');
+                                            })
+                                        } else {
+                                            layer.msg(res.msg, {
+                                                icon: 2,
+                                                time: 2000
+                                            })
+                                        }
+                                    }
+                                })
+                                layer.close(index); //关闭弹层
+                            });
+                            submit.trigger('click');
+                        }
+                    });
+                }
+            });
+
+            // 批量删除事件
+            var active = {
+                batchdel: function () {
+                    var checkStatus = table.checkStatus('link')
+                        , checkData = checkStatus.data; //得到选中的数据
+
+                    if (checkData.length === 0) {
+                        return layer.msg('请选择数据');
+                    }
+
+                    var arr = [];
+                    // 拼接所需要的数组
+                    for (var i = 0; i < checkData.length; i++) {
+                        arr.push(checkData[i].id);
+                    }
+                    arr = arr.join(",");
+
+
+                    layer.confirm('确定删除吗？', function (index) {
+                        $.ajax({
+                            url: "/link/alldel"
+                            , data: { "id": arr }
+                            , type: 'post'
+                            , dataType: 'json'
+                            , success: function (res) {
+                                if (res.code == 1) {
+                                    layer.msg(res.msg, {
+                                        icon: 1,
+                                        time: 1000
+                                    }, function () {
+                                        table.reload('link');
+                                    })
+                                } else {
+                                    layer.msg(res.msg, {
+                                        icon: 2,
+                                        time: 2000
+                                    })
+                                }
+                            }
+                        })
+                    });
+                },
+                add: function () {
+                    layer.open({
+                        type: 2
+                        , title: '添加友链'
+                        , content: '{:url("/link/create")}'
+                        , area: ['500px', '480px']
+                        , btn: ['确定', '取消']
+                        , yes: function (index, layero) {
+                            var iframeWindow = window['layui-layer-iframe' + index]
+                                , submit = layero.find('iframe').contents().find("#LAY-link-submit");
+
+                            //监听提交
+                            iframeWindow.layui.form.on('submit(LAY-link-submit)', function (data) {
+                                var field = data.field; //获取提交的字段
+
+                                //提交 Ajax 成功后，静态更新表格中的数据
+                                $.ajax({
+                                    url: "{:url('/link/save')}"
+                                    , data: field
+                                    , type: 'post'
+                                    , dataType: 'json'
+                                    , success: function (res) {
+                                        if (res.code == 1) {
+                                            layer.msg(res.msg, {
+                                                icon: 1,
+                                                time: 1000
+                                            }, function () {
+                                                table.reload('link');
+                                            })
+                                        } else {
+                                            layer.msg(res.msg, {
+                                                icon: 2,
+                                                time: 2000
+                                            })
+                                        }
+                                    }
+                                })
+                                //table.reload('category');
+                                layer.close(index); //关闭弹层
+                            });
+
+                            submit.trigger('click');
+                        }
+                    });
+                }
+            }
+            $('.layui-btn.layuiadmin-btn-role').on('click', function () {
+                var type = $(this).data('type');
+                active[type] ? active[type].call(this) : '';
+            });
+        });
+    </script>
+</body>
+
+</html>

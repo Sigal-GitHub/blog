@@ -1,0 +1,66 @@
+{extend name="base/base" /}
+
+{block name="title"}Sigal的个人博客{/block}
+<!-- <div class="picshow">
+    <ul>
+      <li><a href="/"><i><img src="__HOME__/images/b01.jpg"></i>
+          <div class="font">
+            <h3>个人博客模板《早安》</h3>
+          </div>
+        </a></li>
+      <li><a href="/"><i><img src="__HOME__/images/b02.jpg"></i>
+          <div class="font">
+            <h3>个人博客模板《早安》</h3>
+          </div>
+        </a></li>
+      <li><a href="/"><i><img src="__HOME__/images/b03.jpg"></i>
+          <div class="font">
+            <h3>个人博客模板《早安》</h3>
+          </div>
+        </a></li>
+      <li><a href="/"><i><img src="__HOME__/images/b04.jpg"></i>
+          <div class="font">
+            <h3>个人博客模板《早安》</h3>
+          </div>
+        </a></li>
+      <li><a href="/"><i><img src="__HOME__/images/b05.jpg"></i>
+          <div class="font">
+            <h3>个人博客模板《早安》</h3>
+          </div>
+        </a></li>
+    </ul>
+  </div> -->
+{block name="main"}
+<div class="blogs">
+  {volist name="articles" id="vo"}
+  <!-- <li> <span class="blogpic"><a href="/"><img src="__HOME__/images/text02.jpg"></a></span> -->
+  <li>
+    <span class="blogpic">
+      <a href="/">
+        {if ($vo.cover != null)}
+        <img src="/storage/{$vo.cover}">
+        {else /}
+        <img src="moren.jpg">
+        {/if}
+
+      </a>
+    </span>
+    <h3 class="blogtitle"><a href="/">{$vo.title}</a></h3>
+    <div class="bloginfo">
+      <p>{$vo.desc}...</p>
+    </div>
+    <div class="autor">
+      <span class="lm"><a href="/" title="CSS3|Html5" target="_blank" class="classname">CSS3|Html5</a></span>
+      <span class="dtime">更新时间：{$vo.release_time|date='Y-m-d H:i:s'}</span>
+      <span class="dtime">发布时间：{$vo.update_time}</span>
+      <span class="viewnum">浏览（<a href="/">{$vo.views}</a>）</span>
+      <span class="readmore"><a href="/article/{$vo.id}.html">阅读原文</a></span>
+    </div>
+  </li>
+  {/volist}
+  <!-- <div class="blogpic">
+    {$articles|raw}
+  </div> -->
+</div>
+
+{/block}

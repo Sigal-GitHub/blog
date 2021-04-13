@@ -1,0 +1,89 @@
+{extend name="base/base" /}
+
+{block name="css"}
+<link rel="stylesheet" href="__ADMIN__/plugins/editor/css/editormd.min.css" media="all">
+{/block}
+
+
+{block name="main"}
+<div class="infos">
+  <div class="newsview">
+    <h3 class="news_title">{$article.title}</h3>
+
+    <div class="news_author">
+      <span class="au01"><a href="mailto:dancesmiling@qq.com">{$article.author}</a></span>
+      <span class="au02">{$article.release_time|date="Y-m-d H:i:s"}</span>
+      <span class="au03">点击量：<b>{$article.views}</b></span>
+    </div>
+
+    <div class="tags">
+      <a href="/e/tags/?tagname=%B8%F6%C8%CB%B2%A9%BF%CD&amp;tempid=13" target="_blank">个人博客</a>
+      &nbsp;
+      <a href="/e/tags/?tagname=%D0%A1%CA%C0%BD%E7&amp;tempid=13" target="_blank">小世界</a>
+    </div>
+
+    <div class="news_about">
+      <strong>简介</strong>
+      {$article.desc}
+    </div>
+
+    <div class="news_infos" id="article">
+      <textarea style="display:none;">{$article.content}</textarea>
+    </div>
+  </div>
+  <div class="share"> </div>
+  <div class="nextinfo">
+    <p>上一篇：<a href="/news/life/2018-03-13/804.html">{$prev.title}</a></p>
+    <p>下一篇：<a href="/news/life/">{$next.title}</a></p>
+  </div>
+  <div class="otherlink">
+    <h2>相关文章</h2>
+    <ul>
+      <li><a href="/download/div/2018-04-22/815.html" title="html5个人博客模板《黑色格调》">html5个人博客模板《黑色格调》</a></li>
+      <li><a href="/download/div/2018-04-18/814.html" title="html5个人博客模板主题《清雅》">html5个人博客模板主题《清雅》</a></li>
+      <li><a href="/download/div/2018-03-18/807.html" title="html5个人博客模板主题《绅士》">html5个人博客模板主题《绅士》</a></li>
+      <li><a href="/download/div/2018-02-22/798.html" title="html5时尚个人博客模板-技术门户型">html5时尚个人博客模板-技术门户型</a></li>
+      <li><a href="/download/div/2017-09-08/789.html" title="html5个人博客模板主题《心蓝时间轴》">html5个人博客模板主题《心蓝时间轴》</a></li>
+      <li><a href="/download/div/2017-07-16/785.html" title="古典个人博客模板《江南墨卷》">古典个人博客模板《江南墨卷》</a></li>
+      <li><a href="/download/div/2017-07-13/783.html" title="古典风格-个人博客模板">古典风格-个人博客模板</a></li>
+      <li><a href="/download/div/2015-06-28/748.html" title="个人博客《草根寻梦》—手机版模板">个人博客《草根寻梦》—手机版模板</a></li>
+      <li><a href="/download/div/2015-04-10/746.html" title="【活动作品】柠檬绿兔小白个人博客模板">【活动作品】柠檬绿兔小白个人博客模板</a></li>
+      <li><a href="/jstt/bj/2015-01-09/740.html" title="【匆匆那些年】总结个人博客经历的这四年…">【匆匆那些年】总结个人博客经历的这四年…</a></li>
+    </ul>
+  </div>
+  <div class="news_pl">
+    <h2>文章评论</h2>
+    <ul>
+      <div class="gbko"> </div>
+    </ul>
+  </div>
+</div>
+
+{/block}
+
+{block name="js"}
+<script src="http://libs.baidu.com/jquery/2.0.0/jquery.min.js"></script>
+<script src="__ADMIN__/plugins/editor/editormd.min.js"></script>
+<script src="__ADMIN__/plugins/editor/lib/marked.min.js"></script>
+<script src="__ADMIN__/plugins/editor/lib/prettify.min.js"></script>
+
+<script type="text/javascript">
+  var testEditor;
+  $(function () {
+    testEditor = editormd.markdownToHTML("article", {//注意：这里是上面DIV的id
+      htmlDecode: "style,script,iframe",
+      emoji: true,
+      toc: true,
+      tocm: true,
+      tocDropdown: false,
+      taskList: true,
+      htmlDecode:true,
+      tex: true, // 默认不解析
+      flowChart: true, // 默认不解析
+      sequenceDiagram: true, // 默认不解析
+      codeFold: true,
+    });
+  });
+</script>
+
+{/block}

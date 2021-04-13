@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <title>SigalBlog - 文章编辑</title>
+  <meta name="renderer" content="webkit">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <meta name="viewport"
+    content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=0">
+  <link rel="stylesheet" href="__ADMIN__/layuiadmin/layui/css/layui.css" media="all">
+  <link rel="stylesheet" href="__ADMIN__/layuiadmin/style/admin.css" media="all">
+  <link rel="stylesheet" href="__ADMIN__/plugins/editor/css/editormd.min.css" media="all">
+
+</head>
+
+<body>
+  <style>
+    .layui-upload-img {
+      width: 92px;
+      height: 92px;
+      margin: 0 10px 10px 0;
+    }
+  </style>
+  <div class="layui-fluid">
+    <div class="layui-card">
+      <div class="layui-card-header">编辑文章</div>
+      <div class="layui-card-body" style="padding: 15px;">
+        <form class="layui-form" lay-filter="article-edit">
+          <div class="layui-form-item">
+            <div class="layui-input-block layui-hide">
+              <input type="text" name="id" value="{$article.id}" class="layui-input">
+            </div>
+          </div>
+          <div class="layui-form-item">
+            <label class="layui-form-label">文章标题：</label>
+            <div class="layui-input-block">
+              <input type="text" name="title" value="{$article.title}" lay-verify="required" autocomplete="off"
+                placeholder="请输入标题" class="layui-input">
+            </div>
+          </div>
+          <div class="layui-form-item layui-form-text">
+            <label class="layui-form-label">文章摘要：</label>
+            <div class="layui-input-block">
+              <textarea name="desc" placeholder="请输入摘要" class="layui-textarea">{$article.desc}</textarea>
+            </div>
+          </div>
+          <div class="layui-form-item">
+            <div class="layui-inline">
+              <label class="layui-form-label">所属分类：</label>
+              <div class="layui-input-inline">
+                <select name="cid">
+
+                  <option value="0">未分类</option>
+                  {volist id="vo" name="categories"}
+                  <option value="{$vo.id}" {if $article.cid == $vo.id} selected {/if}>{$vo.name}</option>
+                  {/volist}
+                </select>
+              </div>
+            </div>
+            <div class="layui-inline">
+              <label class="layui-form-label">是否置顶：</label>
+              <div class="layui-input-inline">
+                <input type="checkbox" name="is_top" lay-skin="switch" value="1" lay-text="是|否" {if $article.is_top==1}
+                  checked {/if}>
+              </div>
+            </div>
+            <div class="layui-inline">
+              <label class="layui-form-label">是否推荐：</label>
+              <div class="layui-input-inline">
+                <input type="checkbox" name="is_recommend" lay-skin="switch" value="1" lay-text="是|否" {if
+                  $article.is_recommend==1} checked {/if}>
+              </div>
+            </div>
+          </div>
+
+          <div class="layui-form-item">
+            <div class="layui-inline">
+              <label class="layui-form-label">标签：</label>
+              <div class="layui-input-inline">
+                <input type="text" name="tags" autocomplete="off" class="layui-input" value="{$article.tags}" placeholder="请输入标签,英文逗号分隔">
+              </div>
+            </div>
+            <div class="layui-inline">
+              <label class="layui-form-label">发布时间：</label>
+              <div class="layui-input-inline">
+                <input type="text" name="create_time" id="create_time" value="{$article.create_time}"
+                  placeholder="留空默认当前时间" autocomplete="off" class="layui-input">
+              </div>
+            </div>
+            <div class="layui-inline">
+              <label class="layui-form-label">阅读数：</label>
+              <div class="layui-input-inline">
+                <input type="text" name="views" placeholder="留空默认为0" value="{$article.views}" autocomplete="off"
+                  class="layui-input">
+              </div>
+            </div>
+          </div>
+
+          <div class="layui-form-item">
+            <label class="layui-form-label">封面图：</label>
+            <div class="layui-input-inline">
+              <input id="LAY_coverSrc" placeholder="图片地址" name="cover" class="layui-input" value="{$article.cover}">
+            </div>
+            <div class="layui-input-inline layui-btn-container" style="width: auto;">
+              <button type="button" class="layui-btn layui-btn-primary" id="LAY_coverUpload">
+                <i class="layui-icon">&#xe67c;</i>上传图片
+              </button>
+              <button type="button" class="layui-btn layui-btn-primary" layadmin-event="coverPreview">查看图片</button>
+            </div>
+            <div class="layui-inline">
+              <label class="layui-form-label">作者：</label>
+              <div class="layui-input-inline">
+                <input type="text" name="author" autocomplete="off" class="layui-input" value="{$article.author}">
+              </div>
+            </div>
+          </div>
+
+          <div class="layui-form-item layui-form-text">
+            <div class="layui-input-block" id="editor">
+              <textarea name="content" style="display:none;">{$article.content}</textarea>
+            </div>
+          </div>
+
+          <div class="layui-form-item layui-layout-admin">
+            <div class="layui-input-block">
+              <!-- <div class="layui-footer" style="left: 0;"> -->
+              <div class="layui-input-inline" style="left: 40%;">
+                {if $article.status == 1||$article.status == 0}
+                <button class="layui-btn" lay-submit lay-filter="updateArticle">确认修改</button>
+                {elseif $article.status == 2/}
+                <button class="layui-btn" lay-submit lay-filter="updateArticle">发布文章</button>
+                <button class="layui-btn layui-btn-warm" lay-submit lay-filter="updateDraft">存草稿</button>
+                {/if}
+                <!-- <button class="layui-btn layui-btn-warm" lay-submit lay-filter="addDraft">存草稿</button> -->
+                <!-- <button type="reset" class="layui-btn layui-btn-primary">重置</button> -->
+              </div>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+
+  <script src="__ADMIN__/layuiadmin/layui/layui.js"></script>
+  <!-- <script src="jquery.min.js"></script> -->
+  <script src="http://libs.baidu.com/jquery/2.0.0/jquery.min.js"></script>
+  <script src="__ADMIN__/plugins/editor/editormd.min.js"></script>
+  <script>
+    $(function () {
+      var editor = editormd("editor", {
+        // width: "100%",
+        height: "600px",
+        // markdown: "xxxx",     // dynamic set Markdown text
+        path: "__ADMIN__/plugins/editor/lib/"  // Autoload modules mode, codemirror, marked... dependents libs path
+      });
+    });
+
+    layui.config({
+      base: '__ADMIN__/layuiadmin/' //静态资源所在路径
+    }).extend({
+      index: 'lib/index' //主入口模块
+    }).use(['index', 'form', 'laydate', 'upload'], function () {
+      var $ = layui.$
+        , admin = layui.admin
+        , element = layui.element
+        , layer = layui.layer
+        , laydate = layui.laydate
+        , upload = layui.upload
+        , form = layui.form;
+
+      //日期时间选择器
+      laydate.render({
+        elem: '#create_time'
+        , type: 'datetime'
+      });
+
+      //上传头像
+      var coverSrc = $('#LAY_coverSrc');
+      upload.render({
+        url: '/article/cover'
+        , elem: '#LAY_coverUpload'
+        , field: 'coverpic'
+        , done: function (res) {
+          if (res.status == 0) {
+            coverSrc.val(res.url);
+            layer.msg('图片上传成功');
+          } else {
+            layer.msg(res.msg, { icon: 5 });
+          }
+        }
+      });
+
+      //查看头像
+      admin.events.coverPreview = function (othis) {
+        var src = coverSrc.val();
+        // console.log("..\\" + src);
+        layer.photos({
+          photos: {
+            "title": "查看封面" //相册标题
+            , "data": [{
+              "alt": "文章封面"
+              , "src": '..\\..\\storage\\' + src //原图地址
+            }]
+          }
+          , shade: 0.01
+          , closeBtn: 2
+          // , anim: 5
+        });
+      };
+
+      // 提交表单
+      form.on('submit(updateArticle)', function (obj) {
+        // 设置置顶和推荐的值：如果没有这两个值，给个默认 0 方便和后台同步数据
+        if (!obj.field.is_recommend) {
+          obj.field.is_recommend = 0;
+        } else {
+          obj.field.is_recommend = 1;
+        }
+        if (!obj.field.is_top) {
+          obj.field.is_top = 0;
+        } else {
+          obj.field.is_top = 1;
+        }
+        // obj.field.is_recommend = !obj.field.is_recommend ? 0:1 ;
+        // obj.field.is_top == !obj.field.is_top? 0:1 ;
+        //提交修改
+        $.ajax({
+          url: '/article/update/' + obj.field.id
+          , data: obj.field
+          , type: 'put'
+          , dataType: 'json'
+          , success: function (res) {
+            if (res.code == 1) {
+              layer.msg(res.msg, { icon: 1, time: 1000 }, function () {
+                var url = '/article';
+                var tit = '文章列表';
+                // if (top.layui.index) {
+                top.layui.index.openTabsPage(url, tit)
+                // } else {
+                //   window.open(url)
+                // }
+              });
+            } else {
+              layer.msg(res.msg, { icon: 2, time: 2000 });
+            }
+          }
+        });
+        return false;
+      });
+
+      // 提交表单
+      form.on('submit(updateDraft)', function (obj) {
+        //提交修改
+        $.ajax({
+          url: '/article/updatedraft/' + obj.field.id
+          , data: obj.field
+          , type: 'put'
+          , dataType: 'json'
+          , success: function (res) {
+            if (res.code == 1) {
+              layer.msg(res.msg, { icon: 1, time: 1000 }, function () {
+                var url = '/article/draft';
+                var tit = '草稿箱';
+                if (top.layui.index) {
+                  top.layui.index.openTabsPage(url, tit)
+                } else {
+                  window.open(url)
+                }
+              });
+            } else {
+              layer.msg(res.msg, { icon: 2, time: 2000 });
+            }
+          }
+        });
+        return false;
+      });
+
+      // 渲染表单
+      form.render(null, 'component-form-group');
+
+      /* 监听提交 */
+      form.on('submit(component-form-demo1)', function (data) {
+        parent.layer.alert(JSON.stringify(data.field), {
+          title: '最终的提交信息'
+        })
+        return false;
+      });
+    });
+  </script>
+</body>
+
+</html>
