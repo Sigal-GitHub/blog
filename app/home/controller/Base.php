@@ -8,6 +8,7 @@ use app\common\business\Article as BusinessArticle;
 use app\common\model\mysql\Category;
 use app\common\model\mysql\Article;
 use app\common\model\mysql\Link;
+use app\common\model\mysql\Tag;
 use think\facade\Db;
 use think\facade\View;
 
@@ -19,11 +20,13 @@ class Base
         $this->getCategory();
         $this->getCommend();
         $this->getLink();
+        $this->getTag();
     }
+
     public static function getCategory()
     {
         // 获取分类
-        $categories = Category::where('pid', 0)->select();
+        $categories = Category::where('pid', 0)->order('sort','desc')->select();
         View::assign('categories', $categories);
     }
 
@@ -46,5 +49,11 @@ class Base
     {
         $links = Link::where('status', 1)->select();
         View::assign('link', $links);
+    }
+
+    public static function getTag()
+    {
+        $tags = Tag::select();
+        View::assign('tag', $tags);
     }
 }

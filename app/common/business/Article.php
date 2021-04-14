@@ -20,6 +20,7 @@ class Article
     {
         $articles = ModelArticle::withoutField('content')
             ->where('status', $mark, $status)
+            ->order('id','desc')
             ->page($page, $limit)
             ->select();
 
@@ -27,14 +28,33 @@ class Article
     }
 
     /**
+     * 通过id获取文章
+     *
+     * @param string $id
+     * @return array
+     */
+    public static function getAritcleById($id)
+    {
+        // 获取文章
+        $article = ModelArticle::find($id);
+        // 这里之前定义了cid的获取器，如果前端要判断所属分类，就要获取原始数据
+        $article['cid'] = $article->getData('cid');
+
+        return $article;
+    }
+
+    /**
      * 保存文章
      *
      * @param array $article
      * @param string $status
-     * @return bool
+     * @return object
      */
     public static function saveArticle($article, $status)
     {
+        // 标签存在另一个表格，这里不需要
+        unset($article['tags']);
+
         // 如果是发布，则使用自定义时间或当前时间，如果是草稿，则不需要发布时间，等待发布的时候再添加上去
         if ($status == 1) {
             $article['release_time'] = $article['release_time'] ? strtotime($article['release_time']) : time();
@@ -42,6 +62,7 @@ class Article
             $article['release_time'] = $article['release_time'] ? strtotime($article['release_time']) : '';
         }
 
+        // 加上 status 字段的值
         $article['status'] = $status;
 
         // 保存文章

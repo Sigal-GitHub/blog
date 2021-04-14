@@ -11,6 +11,7 @@ use app\common\business\Tag as BusinessTag;
 use app\common\model\mysql\Article as ModelArticle;
 use think\exception\ValidateException;
 use think\facade\View;
+use think\facade\Db;
 use think\Request;
 
 class Article
@@ -50,8 +51,11 @@ class Article
         // 获取所有 status != 2 的文章
         $articles = BusinessArticle::getAritcles((int)$page, (int)$limit, '<>', 2);
 
+        // 文章除草稿外的总数
+        $count = ModelArticle::where('status', '<>', 2)->count();
+
         // 返回layui所需要的数据格式
-        return layuiTable(0, '', count($articles), $articles);
+        return layuiTable(0, '', $count, $articles);
     }
 
     /**
@@ -76,8 +80,11 @@ class Article
         // 获取所有 status = 2 的文章
         $articles = BusinessArticle::getAritcles((int)$page, (int)$limit, '=', 2);
 
+        // 草稿的总数
+        $count = ModelArticle::where('status', 2)->count();
+
         // 返回layui所需要的数据格式
-        return layuiTable(0, '', count($articles), $articles);
+        return layuiTable(0, '', $count, $articles);
     }
 
 
@@ -100,6 +107,7 @@ class Article
         } catch (ValidateException $e) {
             // 返回 layui 需要的错误格式
             $data = layuiImage(1, $e->getMessage());
+
             return $data;
         }
 
@@ -112,6 +120,7 @@ class Article
 
     /**
      * 保存文章内容中的图片
+     * // TODO: 把本地更改成阿里云 OSS 上传
      *
      * @param Request $request
      * @return void
@@ -120,7 +129,11 @@ class Article
     {
         // 获取上传的文件
         $file = $request->file('editormd-image-file');
+
+        // 调用业务层处理上传图片
         $savepath = BusinessArticle::uploadImg($file);
+
+        // 拼接格式返回
         return json(['url' => '../storage/' . $savepath, 'success' => 1, 'message' => '图片上传成功!']);
     }
 
@@ -132,40 +145,35 @@ class Article
      */
     public function save(Request $request, $status)
     {
+        // 获取前端数据
         $article = $request->post('', '', 'trim');
 
         // 调用业务层保存文章
-        $article = BusinessArticle::saveArticle($article, $status);
+        $res = BusinessArticle::saveArticle($article, $status);
 
-        // halt($article->id);
+        // 如果 tags 不为空，则保存标签
+        if ($article['tags'])
+            BusinessTag::saveTagByArticle($article['tags'], '', $res->id);        // 调用业务层保存标签
 
-        if (!empty($article['tags']))
-            BusinessTag::saveTag($article['tags']);        // 调用业务层保存标签
-
-        if ($status == 1) {
-            return show(1, '文章发布成功！');
-        } else {
-            return show(1, '保存草稿成功！');
-        }
+        return $status == 1 ? show(1, '文章发布成功！') : show(1, '保存草稿成功！');
     }
 
     /**
-     * 显示编辑资源表单页.
+     * 显示编辑资源表单页
      *
      * @param  int  $id
      * @return \think\Response
      */
     public function edit($id)
     {
-        $article = ModelArticle::find($id);
-        // 这里之前定义了获取器，如果前端要判断所属分类，就要获取原始数据
-        $article = $article->getData();
-        $article['tags']=BusinessTag::getTag($id);
+        // 通过id获取文章
+        $article = BusinessArticle::getAritcleById($id);
+        // 获取标签
+        $article['tags'] = BusinessTag::getTagByArticleId($id);
         View::assign('article', $article);
 
-        // BusinessCategory::viewCategory();
-        $categories = BusinessCategory::getCategories();
-        View::assign('categories', $categories);
+        // 分类
+        View::assign('categories', BusinessCategory::getCategories());
 
         return View::fetch();
     }
@@ -178,10 +186,17 @@ class Article
      */
     public function update(Request $request)
     {
-        $article = $request->put();
+        // 获取前端数据
+        $article = $request->put('', '', 'trim');
 
-        $article['create_time'] = strtotime($article['create_time']);
+        // 将发布时间转换成时间戳保存  关于 create_time 和 update_time，开启了自动时间戳，不用管
+        $article['release_time'] = strtotime($article['release_time']);
 
+        // 如果tags 有值，则需要更新
+        if ($article['tags'])
+            BusinessTag::saveTagByArticle($article['tags'], 'update', $article['id']);
+
+        // article 数组中包含 id，直接更新
         ModelArticle::update($article);
 
         return show(1, '更新文章成功！');
@@ -189,21 +204,25 @@ class Article
 
     /**
      * 删除指定的文章
-     * // TODO: 连带删除图片未做，如果有留言，怎么处理，更改后的代码应该放在 business 中
      *
      * @param  int  $id
      * @return json
      */
     public function delete($id)
     {
+        // 直接删除文章
         ModelArticle::destroy($id);
+
+        // 删除文章与标签关系表的数据
+        Db::table('blog_article_tag')->where('article_id', $id)->delete();
+
+        // TODO: 连带删除留言未做，处理完需要把这里的代码转移到 business 中
 
         return show(1, '删除文章成功！');
     }
 
     /**
      * 批量删除文章
-     * // TODO: 连带删除图片未做，如果有留言，怎么处理，更改后的代码应该放在 business 中
      *
      * @param Request $request
      * @return json
@@ -213,8 +232,15 @@ class Article
         // 将接收的数据拼接成需要的数据
         $data = explode(',', $request->post('id'));
 
-        // 批量删除
+        // 根据文章 ID 批量删除文章
         ModelArticle::destroy($data);
+
+        // 根据文章 ID 循环删除 关系表中对应的数据
+        foreach ($data as $value) {
+            Db::table('blog_article_tag')->where('article_id', $value)->delete();
+        }
+
+        // TODO: 连带删除留言未做，处理完需要把这里的代码转移到 business 中
 
         return show(1, '批量删除文章成功!');
     }

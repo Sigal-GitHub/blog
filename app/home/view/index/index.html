@@ -36,7 +36,7 @@
   <!-- <li> <span class="blogpic"><a href="/"><img src="__HOME__/images/text02.jpg"></a></span> -->
   <li>
     <span class="blogpic">
-      <a href="/">
+      <a href="/article/{$vo.id}.html">
         {if ($vo.cover != null)}
         <img src="/storage/{$vo.cover}">
         {else /}
@@ -45,15 +45,15 @@
 
       </a>
     </span>
-    <h3 class="blogtitle"><a href="/">{$vo.title}</a></h3>
+    <h3 class="blogtitle"><a href="/article/{$vo.id}.html">{$vo.title}</a></h3>
     <div class="bloginfo">
       <p>{$vo.desc}...</p>
     </div>
     <div class="autor">
       <span class="lm"><a href="/" title="CSS3|Html5" target="_blank" class="classname">CSS3|Html5</a></span>
       <span class="dtime">更新时间：{$vo.release_time|date='Y-m-d H:i:s'}</span>
-      <span class="dtime">发布时间：{$vo.update_time}</span>
-      <span class="viewnum">浏览（<a href="/">{$vo.views}</a>）</span>
+      <!-- <span class="dtime">发布时间：{$vo.update_time}</span> -->
+      <span class="viewnum">浏览（<a href="/article/{$vo.id}.html">{$vo.views}</a>）</span>
       <span class="readmore"><a href="/article/{$vo.id}.html">阅读原文</a></span>
     </div>
   </li>
